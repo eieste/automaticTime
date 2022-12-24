@@ -1,0 +1,8 @@
+
+
+pre-commit
+pytest
+mdformat
+sphinx
+pytest-cov
+pytest-mock==3.7.0

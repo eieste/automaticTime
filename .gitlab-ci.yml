@@ -1,0 +1,15 @@
+
+stages:
+  - validate
+  - build
+  - test
+  - deploy
+
+before_script:
+  - pip3 install -r requirements-dev.txt
+
+validate:
+  stage: validate
+  script:
+    - pre-commit run -a
+

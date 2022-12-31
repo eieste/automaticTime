@@ -32,3 +32,4 @@ func:test:
     - python3 setup.py build
     - python3 setup.py install
     - python3 -m automatictime --help
+    - python3 -m automatictime -c ~/.automatictime -g

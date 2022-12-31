@@ -3,8 +3,8 @@ import argparse
 import logging
 from pathlib import Path
 
-from automaticTime.config import Config
-from automaticTime.exceptions import ConfigError
+from automatictime.config import Config
+from automatictime.exceptions import ConfigError
 
 log = logging.getLogger("automaticTime")
 

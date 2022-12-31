@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from automaticTime.cli import Command
+from automatictime.cli import Command
 
 if __name__ == "__main__":
     cmd = Command()

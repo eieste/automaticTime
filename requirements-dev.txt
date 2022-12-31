@@ -6,3 +6,5 @@ mdformat
 sphinx
 pytest-cov
 pytest-mock==3.7.0
+sphinx
+sphinx-rtd-theme

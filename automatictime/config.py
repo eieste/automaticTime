@@ -81,14 +81,11 @@ class Config:
         if file.exists():
             raise ConfigError("Config file already exists. Cant generate a new one")
 
-        with file.open("rw") as fobj:
-            yaml.dump(fobj)
         resource_path = '/'.join(('templates', 'config.yml'))  # Do not use os.path.join()
 
-        template = pkg_resources.resource_string(resource_package, resource_path)
-        with file.open("w") as fobj:
+        with file.open("wb") as fobj:
             template = pkg_resources.resource_stream(resource_package, resource_path)
-            fobj.write(template)
+            fobj.write(template.read())
 
     def load_config(self):
         with self.config_file.open() as fobj:

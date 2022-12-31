@@ -7,7 +7,7 @@ import pkg_resources
 # -*- coding: utf-8 -*-
 import yaml
 
-from automaticTime.exceptions import ConfigError
+from automatictime.exceptions import ConfigError
 
 # Could be any dot-separated package/module name or a "Requirement"
 resource_package = __name__

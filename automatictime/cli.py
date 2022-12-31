@@ -87,10 +87,6 @@ class Command:
         if options.log_level:
             logging.basicConfig(level=getattr(logging, options.log_level))
 
-        if not options.config_file.is_file():
-            log.error("Config file not found")
-            raise ConfigError("Config file not found")
-
         if options.config_file.exists() and options.generate_config:
             log.error("Config file already exists")
             raise ConfigError("Config file already exists")
@@ -98,6 +94,10 @@ class Command:
         elif options.generate_config and not options.config_file.exists():
             Config.generate(options.config_file)
             return
+
+        if not options.config_file.is_file():
+            log.error("Config file not found")
+            raise ConfigError("Config file not found")
 
         config = Config(options.config_file)
 

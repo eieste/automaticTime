@@ -1,0 +1,55 @@
+version: 1
+
+mocoapp:
+  api_url:
+  api_key:
+
+log:
+  file:
+  level:
+
+true_time:
+  file:
+
+contract:
+  week_work_hours: 40
+
+
+hours:
+  monday:
+    work:
+      start: 05:00
+      end: 22:00
+    pause:
+      start: 10:00
+      end: 15:00
+  tuesday:
+    work:
+      start: 05:00
+      end: 22:00
+    pause:
+      start: 10:00
+      end: 15:00
+  wednesday:
+    work:
+      start: 05:00
+      end: 22:00
+    pause:
+      start: 10:00
+      end: 15:00
+  thursday:
+    work:
+      start: 05:00
+      end: 22:00
+    pause:
+      start: 10:00
+      end: 15:00
+  friday:
+    work:
+      start: 05:00
+      end: 22:00
+    pause:
+      start: 10:00
+      end: 15:00
+  saturday:
+  sunday:

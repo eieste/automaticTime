@@ -3,8 +3,10 @@ import argparse
 import logging
 from pathlib import Path
 
-from automatictime.config import Config
+from automatictime.configmanager import ConfigManager
 from automatictime.exceptions import ConfigError
+from automatictime.http import HttpSession
+from automatictime.projects import list_projects
 
 log = logging.getLogger("automaticTime")
 
@@ -21,12 +23,12 @@ class Command:
             parser = self.parser
         parser.add_argument("-g", "--generate-config", action="store_true")
         parser.add_argument("-c", "--config-file", type=Path, default=Path.home().joinpath(".automatictime"))
-        parser.add_argument('--raw', help='RAW JSON Response')
+        parser.add_argument('--raw', help='RAW JSON Response', action="store_true")
         parser.add_argument('--log-level', type=str, default='INFO')
 
         subparsers = parser.add_subparsers(dest='command')
 
-        activity_parser = subparsers.add_parser('activities', help='List all available Activities')
+        projects_parser = subparsers.add_parser('projects', help='List all available Projects')
 
         start_parser = subparsers.add_parser('start', help='Startzeitpunkt ermitteln und Setzen')
         end_parser = subparsers.add_parser('stop', help='Endzeitpunkt ermitteln und setzen')
@@ -34,17 +36,18 @@ class Command:
         fix_pause_cmd = subparsers.add_parser('fix-pause', help='Beheben von fehlenden Pausenzeiten')
         fix_overtime_cmd = subparsers.add_parser('fix-overtime', help='Beheben von Überstunden')
 
-        self.add_activity_arguments(activity_parser)
+        self.add_projects_arguments(projects_parser)
         self.add_start_arguments(start_parser)
         self.add_end_arguments(end_parser)
         self.add_pause_arguments(pause_parser)
         self.add_fix_pause_arguments(fix_pause_cmd)
         self.add_fix_overtime_arguments(fix_overtime_cmd)
 
-    def add_activity_arguments(self, parser=None):
+    def add_projects_arguments(self, parser=None):
         if parser is None:
             parser = self.parser
-        parser.add_argument('--list', help='List all Activities')
+        parser.add_argument('--list', help='List all Projects', action="store_true")
+        parser.add_argument('--filter', help='JSON Filter Expression')
 
     def add_start_arguments(self, parser=None):
         if parser is None:
@@ -88,18 +91,24 @@ class Command:
             logging.basicConfig(level=getattr(logging, options.log_level))
 
         if options.config_file.exists() and options.generate_config:
-            log.error("Config file already exists")
-            raise ConfigError("Config file already exists")
+            log.error("ConfigManager file already exists")
+            raise ConfigError("ConfigManager file already exists")
 
         elif options.generate_config and not options.config_file.exists():
-            Config.generate(options.config_file)
+            ConfigManager.generate(options.config_file)
             return
 
         if not options.config_file.is_file():
-            log.error("Config file not found")
-            raise ConfigError("Config file not found")
+            log.error("ConfigManager file not found")
+            raise ConfigError("ConfigManager file not found")
 
-        config = Config(options.config_file)
+        config_mgr = ConfigManager(options.config_file)
+        config_mgr.update_by_args(options)
+
+        http = HttpSession("mocoapp", config_mgr.config, options)
+
+        if options.command == "projects":
+            list_projects(config_mgr.config, options, http)
 
 
 if __name__ == "__main__":

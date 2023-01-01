@@ -3,14 +3,24 @@ from pathlib import Path
 
 import marshmallow as ma
 from piny import MarshmallowValidator, StrictMatcher, YamlLoader
+from piny.validators import LoadedData
 import pkg_resources
-# -*- coding: utf-8 -*-
-import yaml
 
 from automatictime.exceptions import ConfigError
 
+# -*- coding: utf-8 -*-
+
 # Could be any dot-separated package/module name or a "Requirement"
 resource_package = __name__
+
+
+class CustomMarshmallowValidator(MarshmallowValidator):
+
+    def load(self, data: LoadedData, **params):
+        try:
+            return self.schema(**self.schema_params).load(data, **params)
+        except Exception as e:
+            raise ma.ValidationError(origin=e, reason=str(e))
 
 
 class LogSchema(ma.Schema):
@@ -37,6 +47,7 @@ class MocoAppSchema(ma.Schema):
 
 class ContractSchema(ma.Schema):
     week_work_hours = ma.fields.Float(required=True)
+    max_day_work_hours = ma.fields.Float(required=True)
 
 
 class DurationSchema(ma.Schema):
@@ -50,16 +61,17 @@ class DaySchema(ma.Schema):
 
 
 class HoursSchema(ma.Schema):
-    monday = ma.fields.Nested(DaySchema)
-    tuesday = ma.fields.Nested(DaySchema)
-    wednesday = ma.fields.Nested(DaySchema)
-    thursday = ma.fields.Nested(DaySchema)
-    friday = ma.fields.Nested(DaySchema)
-    saturday = ma.fields.Nested(DaySchema)
-    sunday = ma.fields.Nested(DaySchema)
+    monday = ma.fields.Nested(DaySchema, allow_none=True)
+    tuesday = ma.fields.Nested(DaySchema, allow_none=True)
+    wednesday = ma.fields.Nested(DaySchema, allow_none=True)
+    thursday = ma.fields.Nested(DaySchema, allow_none=True)
+    friday = ma.fields.Nested(DaySchema, allow_none=True)
+    saturday = ma.fields.Nested(DaySchema, allow_none=True)
+    sunday = ma.fields.Nested(DaySchema, allow_none=True)
 
 
 class ConfigSchema(ma.Schema):
+    version = ma.fields.Integer(required=True)
     mocoapp = ma.fields.Nested(MocoAppSchema)
     log = ma.fields.Nested(LogSchema)
     true_time = ma.fields.Nested(TrueTimeSchema)
@@ -67,7 +79,7 @@ class ConfigSchema(ma.Schema):
     hours = ma.fields.Nested(HoursSchema)
 
 
-class Config:
+class ConfigManager:
 
     CURRENT_CONFIG_VERSION = 1
 
@@ -79,7 +91,7 @@ class Config:
     @staticmethod
     def generate(file):
         if file.exists():
-            raise ConfigError("Config file already exists. Cant generate a new one")
+            raise ConfigError("ConfigManager file already exists. Cant generate a new one")
 
         resource_path = '/'.join(('templates', 'config.yml'))  # Do not use os.path.join()
 
@@ -88,15 +100,10 @@ class Config:
             fobj.write(template.read())
 
     def load_config(self):
-        with self.config_file.open() as fobj:
-            config_data = yaml.load(fobj)
-            config_version = config_data.get("version")
-            if config_version == Config.CURRENT_CONFIG_VERSION:
-                self.config = YamlLoader(
-                    path=self.config_file.resolve(),
-                    matcher=StrictMatcher,
-                    validator=MarshmallowValidator,
-                    schema=ConfigSchema,
-                    strict=True).load(many=False)
-            else:
-                raise ConfigError(f"Wrong Config Version. Required is {Config.CURRENT_CONFIG_VERSION}")
+        self.config = YamlLoader(
+            path=self.config_file.resolve(), matcher=StrictMatcher, validator=CustomMarshmallowValidator, schema=ConfigSchema).load()
+        if self.config.get("version") != 1:
+            raise ConfigError("Unsupported config version")
+
+    def update_by_args(self, options):
+        self.config["log"]["level"] = options.log_level
